@@ -504,15 +504,28 @@ def main():
                      + ('<span class="badge remote">Remote</span>' if is_remote(j) else ""))
         summary = esc(j.get("description_summary") or "")
         summary_block = f'<div class="summary">{summary}</div>' if summary else ""
-        apply_btn = (f'<a class="btn apply-btn" href="{esc(j["url"])}" rel="nofollow" '
-                     f'target="_blank">Apply on the employer\'s site {ICON_ARROW}</a>')
+        # Supplementary aggregator sources (Remote OK / Remotive / Jobicy) require
+        # a named credit + hyperlink back on the page where their data is used,
+        # and their apply URL points at the aggregator's own job page, not the
+        # employer's site — so both the button label and the source note differ.
+        SUPP_NAME = {"remoteok": "Remote OK", "remotive": "Remotive", "jobicy": "Jobicy"}
+        if j.get("source", "") in SUPP_NAME:
+            supp = SUPP_NAME[j["source"]]
+            apply_btn = (f'<a class="btn apply-btn" href="{esc(j["url"])}" rel="nofollow" '
+                         f'target="_blank">Apply via {supp} {ICON_ARROW}</a>')
+            src_note = (f'<p class="src-note">Source: <a href="{esc(j["url"])}">{supp}</a> '
+                        f'(aggregated listing). Summary only; the full description and application are on the original posting.</p>')
+        else:
+            apply_btn = (f'<a class="btn apply-btn" href="{esc(j["url"])}" rel="nofollow" '
+                         f'target="_blank">Apply on the employer\'s site {ICON_ARROW}</a>')
+            src_note = (f'<p class="src-note">Source: {esc(src)}. Summary only; the full description and application are on the original posting.</p>')
         body = (f'<nav class="crumbs"><a href="/">Home</a> / '
                 f'<a href="/companies/{cslug}.html">{esc(j["company"])}</a> / {esc(j["title"])}</nav>'
                 f'<div class="job-head"><h1>{esc(j["title"])}</h1>'
                 f'<div class="meta">{meta_bits}</div></div>'
                 f"{summary_block}"
                 f'<div class="apply-box">{apply_btn}'
-                f'<p class="src-note">Source: {esc(src)}. Summary only; the full description and application are on the original posting.</p></div>'
+                f'{src_note}</div>'
                 + alert_form("alertForm", "Similar roles, weekly",
                              f"Get new {esc(j['company'])} and similar AI roles in one short weekly email.", "Get job alerts")
                 + f'<p style="margin-top:24px"><a href="/companies/{cslug}.html">More jobs at {esc(j["company"])}</a></p>'
